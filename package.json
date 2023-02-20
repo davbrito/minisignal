@@ -31,6 +31,13 @@
   "repository": {
     "url": "https://github.com/davbrito/minisignal.git"
   },
+  "keywords": [
+    "signal",
+    "react",
+    "preact",
+    "reactive",
+    "reactive programming"
+  ],
   "devDependencies": {
     "@testing-library/dom": "^9.0.0",
     "@testing-library/jest-dom": "^5.16.5",
