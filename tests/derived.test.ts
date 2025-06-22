@@ -4,14 +4,14 @@ import { signal } from "../src/signal";
 
 test("has the initial value on initialize", () => {
   const s = signal(1);
-  const d = derived(s, (value) => value * 2);
+  const d = derived(() => s.value * 2);
 
   expect(d.value).toBe(2);
 });
 
 test("has the new value after set", () => {
   const s = signal(1);
-  const d = derived(s, (value) => value * 2);
+  const d = derived(() => s.value * 2);
 
   s.value = 10;
 
@@ -20,19 +20,22 @@ test("has the new value after set", () => {
 
 test("calls the listener when the value changes", () => {
   const s = signal(1);
-  const d = derived(s, (value) => value * 2);
+  const d = derived(() => s.value * 2);
   const listener = vi.fn();
 
   d.subscribe(listener);
 
+  expect(listener).not.toHaveBeenCalled();
+
   s.value = 10;
 
-  expect(listener).toHaveBeenCalledWith(20);
+  expect(listener).toHaveBeenCalledTimes(1);
+  expect(d).toHaveProperty("value", 20);
 });
 
 test("does not call the listener when the value does not change", () => {
   const s = signal(1);
-  const d = derived(s, (value) => value * 2);
+  const d = derived(() => s.value * 2);
   const listener = vi.fn();
 
   d.subscribe(listener);
@@ -46,7 +49,7 @@ test("does not call the listener when the value does not change", () => {
 
 test("does not call the listener when unsubscribed", () => {
   const s = signal(1);
-  const d = derived(s, (value) => value * 2);
+  const d = derived(() => s.value * 2);
   const listener = vi.fn();
 
   const unsubscribe = d.subscribe(listener);
@@ -60,7 +63,7 @@ test("does not call the listener when unsubscribed", () => {
 
 test("can't set the value of a derived signal", () => {
   const s = signal(1);
-  const d = derived(s, (value) => value * 2);
+  const d = derived(() => s.value * 2);
 
   expect(() => {
     // @ts-expect-error - this is expected to fail

@@ -9,3 +9,8 @@ export function invariant(
     );
   }
 }
+
+export function noop(): void {
+  // This function intentionally does nothing.
+  // It can be used as a placeholder or to satisfy type requirements.
+}

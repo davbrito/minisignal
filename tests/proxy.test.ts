@@ -24,7 +24,7 @@ test("detects nested changes and calls the listener with the new value", () => {
   });
   const listener = vi.fn();
 
-  s.subscribe(listener);
+  s.subscribe(() => listener(s.value));
 
   s.value.a = 2;
 
@@ -174,7 +174,7 @@ describe("arrays", () => {
         expect(proxy.get(s.value)).not.toEqual(original);
         expect(proxy.get(s.value)).toEqual(expected);
         expect(ret).toEqual(expectedReturn);
-      }
+      },
     );
   });
 
@@ -203,7 +203,7 @@ describe("arrays", () => {
     const s = proxy(original);
 
     const listener = vi.fn();
-    s.subscribe(listener);
+    s.subscribe(() => listener(s.value));
 
     s.value[0].a = 2;
 

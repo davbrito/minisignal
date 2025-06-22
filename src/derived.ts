@@ -1,20 +1,55 @@
+import { consume } from "./_internal/consume.js";
+import { noop } from "./_internal/utils.js";
 import type { Signal } from "./signal.js";
-import { signal } from "./signal.js";
 
-export function derived<T, U>(
-  base: Signal<T>,
-  fn: (value: T) => U
-): Readonly<Signal<U>> {
-  const derivedSignal = signal(fn(base.value));
+export function derived<U>(fn: () => U): Readonly<Signal<U>> {
+  let base: ReadonlyArray<Signal<unknown>>;
+  let valid = false;
+  let currentValue: U | undefined;
 
-  base.subscribe((value) => {
-    derivedSignal.value = fn(value);
-  });
+  const invalidate = () => {
+    valid = false;
+    currentValue = undefined;
+  };
+
+  const get = () => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (valid) return currentValue!;
+    const [value, signals] = consume(fn);
+    base = signals;
+    valid = true;
+    currentValue = value;
+    return value;
+  };
+
+  const subscribe = (callback: () => void): (() => void) => {
+    if (!valid) {
+      get(); // Ensure the value is computed before subscribing
+    }
+
+    if (base === undefined || base.length === 0) {
+      return noop;
+    }
+
+    const subscriptions = base.map((s) =>
+      s.subscribe(() => {
+        invalidate();
+        callback();
+      }),
+    );
+
+    return () => {
+      for (const unsubscribe of subscriptions) {
+        unsubscribe();
+      }
+      invalidate();
+    };
+  };
 
   return Object.freeze({
-    ...derivedSignal,
+    subscribe,
     get value() {
-      return derivedSignal.value;
+      return get();
     },
     set value(_v) {
       throw new Error("Can't set the value of a derived signal");

@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import type { JSX, ReactElement } from "react";
 import { createElement, useSyncExternalStore } from "react";
 import { batch } from "./_internal/batch.js";
 import { derived as coreDerived } from "./derived.js";
@@ -11,11 +11,8 @@ export function signal<T>(value: T): ReactSignal<T> {
   return reactizeSignal(coreSignal(value));
 }
 
-export function derived<T, U>(
-  baseSignal: Signal<T>,
-  fn: (value: T) => U
-): Readonly<ReactSignal<U>> {
-  return reactizeSignal(coreDerived(baseSignal, fn));
+export function derived<T>(fn: () => T): Readonly<ReactSignal<T>> {
+  return reactizeSignal(coreDerived(fn));
 }
 
 function reactizeSignal<T>(signal: Signal<T>): ReactSignal<T> {
@@ -24,7 +21,7 @@ function reactizeSignal<T>(signal: Signal<T>): ReactSignal<T> {
   const Signal = () => {
     return useSyncExternalStore(
       signal.subscribe,
-      getSnapshot
+      getSnapshot,
     ) as JSX.Element | null;
   };
 

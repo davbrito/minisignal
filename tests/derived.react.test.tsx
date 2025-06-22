@@ -9,7 +9,7 @@ import { signal } from "../src/signal";
 
 test("renders correctly", async () => {
   const s = signal(1);
-  const d = derived(s, (v) => v * 10);
+  const d = derived(() => s.value * 10);
 
   const { baseElement } = render(d);
 
@@ -18,7 +18,7 @@ test("renders correctly", async () => {
 
 test("updates the value", async () => {
   const s = signal(1);
-  const d = derived(s, (v) => v * 10);
+  const d = derived(() => s.value * 10);
 
   const { baseElement } = render(d);
 
@@ -31,7 +31,7 @@ test("updates the value", async () => {
 
 test("renders with other elements", () => {
   const s = signal("Hello World");
-  const d = derived(s, (v) => v + "!");
+  const d = derived(() => s.value + "!");
   const { baseElement } = render(
     <div>
       <h1>My App</h1>
@@ -46,7 +46,7 @@ test("renders with other elements", () => {
 
 test("keeps working if cloneElement is used", () => {
   const s = signal("Hello World");
-  const d = derived(s, (v) => v + "!");
+  const d = derived(() => s.value + "!");
   const { baseElement } = render(
     <div>
       <h1>My App</h1>
