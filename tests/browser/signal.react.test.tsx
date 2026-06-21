@@ -4,7 +4,7 @@
 import { act, render } from "@testing-library/react";
 import { cloneElement } from "react";
 import { expect, test, vi } from "vitest";
-import { signal } from "../src/react";
+import { signal } from "../../src/react";
 
 test("renders correctly", async () => {
   const s = signal(1);
@@ -33,11 +33,11 @@ test("renders with other elements", () => {
     <div>
       <h1>My App</h1>
       <p>Message: {s}</p>
-    </div>
+    </div>,
   );
 
   expect(baseElement).toContainHTML(
-    "<h1>My App</h1><p>Message: Hello World</p>"
+    "<h1>My App</h1><p>Message: Hello World</p>",
   );
 });
 
@@ -48,11 +48,11 @@ test("keeps working if cloneElement is used", async () => {
       <h1>My App</h1>
       {/* eslint-disable-next-line @eslint-react/no-clone-element */}
       <p>Message: {cloneElement(s)}</p>
-    </div>
+    </div>,
   );
 
   expect(baseElement).toContainHTML(
-    "<h1>My App</h1><p>Message: Hello World</p>"
+    "<h1>My App</h1><p>Message: Hello World</p>",
   );
 
   await act(async () => {
@@ -61,7 +61,7 @@ test("keeps working if cloneElement is used", async () => {
   });
 
   expect(baseElement).toContainHTML(
-    "<h1>My App</h1><p>Message: Hello React</p>"
+    "<h1>My App</h1><p>Message: Hello React</p>",
   );
 });
 

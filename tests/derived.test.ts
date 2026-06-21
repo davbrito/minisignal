@@ -70,3 +70,12 @@ test("can't set the value of a derived signal", () => {
     d.value = 10;
   }).toThrow();
 });
+
+test("subscribing to a derived with no signal dependencies returns a noop", () => {
+  const d = derived(() => 42);
+
+  const unsub = d.subscribe(() => {});
+
+  expect(unsub).toBeTypeOf("function");
+  expect(() => unsub()).not.toThrow();
+});

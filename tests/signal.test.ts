@@ -1,5 +1,5 @@
 import { expect, it, test, vi } from "vitest";
-import { batch } from "../src/_internal/batch.js";
+import { batch, isBatching } from "../src/_internal/batch.js";
 import { signal } from "../src/signal.js";
 
 test("has the initial value on initialize", () => {
@@ -183,4 +183,37 @@ it("should not call the listener when the value assigned is referentially equal 
   s.value = 12;
 
   expect(listener).not.toHaveBeenCalled();
+});
+
+test("nested batch logs a warning and runs inline", async () => {
+  const s = signal(1);
+  const listener = vi.fn();
+  s.subscribe(listener);
+  const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+  batch(() => {
+    batch(() => {
+      s.value = 2;
+    });
+  });
+
+  expect(warnSpy).toHaveBeenCalledWith("nested batch");
+  expect(s.value).toBe(2);
+
+  warnSpy.mockRestore();
+
+  await Promise.resolve();
+  expect(listener).toHaveBeenCalledTimes(1);
+});
+
+test("isBatching returns the correct state", () => {
+  expect(isBatching()).toBe(false);
+
+  let innerValue: boolean = false;
+  batch(() => {
+    innerValue = isBatching();
+  });
+  expect(innerValue).toBe(true);
+
+  expect(isBatching()).toBe(false);
 });

@@ -2,10 +2,10 @@
  * @vitest-environment jsdom
  */
 import { expect, test } from "vitest";
-import { derived } from "../src/react";
+import { derived } from "../../src/react";
 import { render, act } from "@testing-library/react";
 import { cloneElement } from "react";
-import { signal } from "../src/signal";
+import { signal } from "../../src/signal";
 
 test("renders correctly", async () => {
   const s = signal(1);
@@ -36,11 +36,11 @@ test("renders with other elements", () => {
     <div>
       <h1>My App</h1>
       <p>Message: {d}</p>
-    </div>
+    </div>,
   );
 
   expect(baseElement).toContainHTML(
-    "<h1>My App</h1><p>Message: Hello World!</p>"
+    "<h1>My App</h1><p>Message: Hello World!</p>",
   );
 });
 
@@ -52,11 +52,11 @@ test("keeps working if cloneElement is used", () => {
       <h1>My App</h1>
       {/* eslint-disable-next-line @eslint-react/no-clone-element */}
       <p>Message: {cloneElement(d)}</p>
-    </div>
+    </div>,
   );
 
   expect(baseElement).toContainHTML(
-    "<h1>My App</h1><p>Message: Hello World!</p>"
+    "<h1>My App</h1><p>Message: Hello World!</p>",
   );
 
   act(() => {
@@ -64,6 +64,6 @@ test("keeps working if cloneElement is used", () => {
   });
 
   expect(baseElement).toContainHTML(
-    "<h1>My App</h1><p>Message: Hello React!</p>"
+    "<h1>My App</h1><p>Message: Hello React!</p>",
   );
 });
