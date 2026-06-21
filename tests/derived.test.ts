@@ -102,9 +102,6 @@ test("derived from multiple signals", () => {
   const s2 = signal(10);
   const d = derived(() => s1.value + s2.value);
 
-  // Derived is lazy — needs a subscriber to auto-invalidate
-  d.subscribe(() => {});
-
   expect(d.value).toBe(11);
 
   s1.value = 5;

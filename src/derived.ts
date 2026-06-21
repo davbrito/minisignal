@@ -6,6 +6,7 @@ export function derived<U>(fn: () => U): Readonly<Signal<U>> {
   let base: ReadonlySet<Signal<unknown>>;
   let valid = false;
   let currentValue: U | undefined;
+  let hasSubscribers = false;
 
   const invalidate = () => {
     valid = false;
@@ -13,7 +14,9 @@ export function derived<U>(fn: () => U): Readonly<Signal<U>> {
   };
 
   const get = () => {
-    if (valid) return currentValue!;
+    // Without subscribers, the derived signal can't be notified of
+    // dependency changes, so always recompute to ensure freshness.
+    if (valid && hasSubscribers) return currentValue!;
     const [value, signals] = consume(fn);
     base = signals;
     valid = true;
@@ -30,6 +33,8 @@ export function derived<U>(fn: () => U): Readonly<Signal<U>> {
       return noop;
     }
 
+    hasSubscribers = true;
+
     const subscriptions = Array.from(base, (s) =>
       s.subscribe(() => {
         invalidate();
@@ -42,6 +47,7 @@ export function derived<U>(fn: () => U): Readonly<Signal<U>> {
         unsubscribe();
       }
       invalidate();
+      hasSubscribers = false;
     };
   };
 
