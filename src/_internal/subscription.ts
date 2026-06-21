@@ -5,7 +5,9 @@ export function Subscription() {
   const subscribers = new Set<Subsbcriber>();
   return {
     notify: () => {
-      for (const subscriber of subscribers) {
+      // Snapshot to avoid infinite loops when subscribers are added/removed
+      // during notification (e.g. effect re-subscribes on change).
+      for (const subscriber of Array.from(subscribers)) {
         subscriber();
       }
     },

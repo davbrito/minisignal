@@ -1,23 +1,27 @@
-let isBatching = false;
+let _batching = false;
 const tasksMap = new WeakMap<WeakKey, () => void>();
 
 export function batch(fn: () => void): void {
-  if (isBatching) {
+  if (_batching) {
     console.warn("nested batch");
     fn();
     return;
   }
 
   try {
-    isBatching = true;
+    _batching = true;
     fn();
   } finally {
-    isBatching = false;
+    _batching = false;
   }
 }
 
+export function isBatching(): boolean {
+  return _batching;
+}
+
 export function enqueue(key: WeakKey, task: () => void): void {
-  if (!isBatching) {
+  if (!_batching) {
     tasksMap.delete(key);
     task();
     return;

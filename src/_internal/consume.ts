@@ -1,34 +1,30 @@
 import type { Signal } from "../signal";
 
-const MINISIGNAL_SCOPE = Symbol.for("minisignal.scope");
-const EMPTY_ARRAY: ReadonlyArray<Signal<unknown>> = Object.freeze([]);
+const MINISIGNAL_STACK = Symbol.for("minisignal.stack");
 
-const current: Set<Signal<unknown>> = ((globalThis as any)[MINISIGNAL_SCOPE] ||=
-  new Set());
-let isConsuming = false;
+/**
+ * Stack of tracking scopes, stored on globalThis via a well-known Symbol so
+ * that multiple versions of the library share the same tracking stack.
+ * Each nested consume() call pushes its own scope, ensuring that signals
+ * are attributed to the correct consumer without leaking across levels.
+ */
+const scopeStack: Array<Set<Signal<unknown>>> = ((globalThis as any)[
+  MINISIGNAL_STACK
+] ??= []);
 
-export function consume<T>(fn: () => T): [T, ReadonlyArray<Signal<unknown>>] {
-  isConsuming = true;
-  current.clear();
+export function consume<T>(fn: () => T): [T, ReadonlySet<Signal<unknown>>] {
+  const scope = new Set<Signal<unknown>>();
+  scopeStack.push(scope);
   try {
     const result = fn();
-
-    if (current.size > 0) {
-      const signals = Array.from(current);
-      return [result, signals];
-    }
-
-    return [result, EMPTY_ARRAY];
+    return [result, scope];
   } finally {
-    current.clear();
-    isConsuming = false;
+    scopeStack.pop();
   }
 }
 
 export function consumeSignal(signal: Signal<unknown>): void {
-  if (!isConsuming) {
-    return;
-  }
-
-  current.add(signal);
+  if (scopeStack.length === 0) return;
+  const scope = scopeStack[scopeStack.length - 1];
+  scope.add(signal);
 }

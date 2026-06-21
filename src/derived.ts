@@ -1,9 +1,9 @@
-import { consume } from "./_internal/consume.js";
+import { consume, consumeSignal } from "./_internal/consume.js";
 import { noop } from "./_internal/utils.js";
 import type { Signal } from "./signal.js";
 
 export function derived<U>(fn: () => U): Readonly<Signal<U>> {
-  let base: ReadonlyArray<Signal<unknown>>;
+  let base: ReadonlySet<Signal<unknown>>;
   let valid = false;
   let currentValue: U | undefined;
 
@@ -26,11 +26,11 @@ export function derived<U>(fn: () => U): Readonly<Signal<U>> {
       get(); // Ensure the value is computed before subscribing
     }
 
-    if (base === undefined || base.length === 0) {
+    if (base === undefined || base.size === 0) {
       return noop;
     }
 
-    const subscriptions = base.map((s) =>
+    const subscriptions = Array.from(base, (s) =>
       s.subscribe(() => {
         invalidate();
         callback();
@@ -48,6 +48,7 @@ export function derived<U>(fn: () => U): Readonly<Signal<U>> {
   return Object.freeze({
     subscribe,
     get value() {
+      consumeSignal(this);
       return get();
     },
     set value(_v) {
