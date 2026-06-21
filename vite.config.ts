@@ -5,7 +5,7 @@ import { defineConfig } from "vite";
 import pkg from "./package.json" with { type: "json" };
 
 const entries = globSync("src/*.{ts,tsx}", {
-  exclude: ["src/_internal/**/*"],
+  exclude: ["src/_internal/**/*", "tests/**/*"],
 });
 
 const externalLibs = Object.keys({
@@ -17,7 +17,7 @@ export default defineConfig({
   plugins: [
     react(),
     dts({
-      exclude: ["src/_internal/**/*"],
+      exclude: ["src/_internal/**/*", "tests/**/*"],
       compilerOptions: { rootDir: "src" },
     }),
   ],
