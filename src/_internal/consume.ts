@@ -8,6 +8,8 @@ const MINISIGNAL_STACK = Symbol.for("minisignal.stack");
  * Each nested consume() call pushes its own scope, ensuring that signals
  * are attributed to the correct consumer without leaking across levels.
  */
+let untrackedDepth = 0;
+
 const scopeStack: Array<Set<SignalValue<unknown>>> = ((globalThis as any)[
   MINISIGNAL_STACK
 ] ??= []);
@@ -26,9 +28,18 @@ export function consume<T>(
 }
 
 export function consumeSignal(signal: SignalValue<unknown>): void {
-  if (scopeStack.length === 0) return;
+  if (scopeStack.length === 0 || untrackedDepth > 0) return;
   const scope = scopeStack[scopeStack.length - 1];
   scope.add(signal);
+}
+
+export function untracked<T>(fn: () => T): T {
+  untrackedDepth++;
+  try {
+    return fn();
+  } finally {
+    untrackedDepth--;
+  }
 }
 
 export class SignalTracker {

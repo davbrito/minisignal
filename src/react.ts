@@ -35,6 +35,18 @@ function reactizeSignal<T>(signal: Signal<T>): ReactSignal<T> {
         signal.value = newValue;
       });
     },
+    peek() {
+      return signal.peek();
+    },
+    valueOf() {
+      return signal.valueOf();
+    },
+    toString() {
+      return signal.toString();
+    },
+    toJSON() {
+      return signal.toJSON();
+    },
     subscribe: signal.subscribe.bind(signal),
   });
 }

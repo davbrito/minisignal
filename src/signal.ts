@@ -2,6 +2,10 @@ import { SignalValue } from "./_internal/value";
 
 export type Signal<T> = {
   value: T;
+  peek(): T;
+  valueOf(): T;
+  toString(): string;
+  toJSON(): T;
   subscribe(listener: () => void): () => void;
 };
 

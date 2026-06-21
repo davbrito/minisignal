@@ -1,5 +1,5 @@
 import { enqueue } from "./batch";
-import { consumeSignal } from "./consume";
+import { consumeSignal, untracked } from "./consume";
 import { invariant } from "./utils";
 
 const EMPTY = Symbol("minisignal.empty");
@@ -20,6 +20,22 @@ export class SignalValue<T> {
     }
     this.#cache = value;
     this.#notify();
+  }
+
+  peek(): T {
+    return untracked(() => this.value);
+  }
+
+  valueOf(): T {
+    return this.value;
+  }
+
+  toString(): string {
+    return this.value + "";
+  }
+
+  toJSON(): T {
+    return this.value;
   }
 
   subscribe = (callback: () => void): (() => void) => {
