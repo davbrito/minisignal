@@ -5,20 +5,29 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing git tag to publish (e.g., v0.3.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write # needed for creating GitHub Releases
+  id-token: write # needed for npm provenance
+  pull-requests: read # needed for reading PR titles in release notes
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write # needed for provenance
-
     strategy:
       matrix:
         node-version: [24]
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
@@ -35,5 +44,21 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Publish
+      - name: Publish to npm
         run: pnpm publish --provenance --access public --no-git-checks
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --generate-notes \
+            --title "${{ steps.version.outputs.tag }}" \
+            --verify-tag
