@@ -213,4 +213,30 @@ describe("arrays", () => {
     expect(proxy.get(s.value[1])).toBe(original[1]);
     expect(proxy.get(s.value[2])).toBe(original[2]);
   });
+
+  test("reverse array method", () => {
+    const original = [1, 2, 3];
+    const s = proxy(original);
+
+    s.value.reverse();
+
+    expect(proxy.get(s.value)).not.toEqual(original);
+    expect(Array.from(s.value)).toEqual([3, 2, 1]);
+  });
+});
+
+test("proxy.get with primitives returns the value directly", () => {
+  expect(proxy.get(42)).toBe(42);
+  expect(proxy.get("hello")).toBe("hello");
+  expect(proxy.get(null)).toBe(null);
+  expect(proxy.get(undefined)).toBe(undefined);
+  expect(proxy.get(true)).toBe(true);
+});
+
+test("symbol property access passes through without proxying", () => {
+  const MY_SYMBOL = Symbol("test");
+  const s = proxy({ [MY_SYMBOL]: "secret", a: 1 });
+
+  expect(s.value[MY_SYMBOL]).toBe("secret");
+  expect(s.value.a).toBe(1);
 });

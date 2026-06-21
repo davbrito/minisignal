@@ -217,3 +217,72 @@ test("isBatching returns the correct state", () => {
 
   expect(isBatching()).toBe(false);
 });
+
+test("multiple subscribers are all notified", () => {
+  const s = signal(1);
+  const listener1 = vi.fn();
+  const listener2 = vi.fn();
+
+  s.subscribe(listener1);
+  s.subscribe(listener2);
+
+  s.value = 2;
+
+  expect(listener1).toHaveBeenCalledTimes(1);
+  expect(listener2).toHaveBeenCalledTimes(1);
+});
+
+test("unsubscribe and resubscribe works", () => {
+  const s = signal(1);
+  const listener = vi.fn();
+
+  const unsub1 = s.subscribe(listener);
+  unsub1();
+
+  s.value = 2;
+  expect(listener).not.toHaveBeenCalled();
+
+  const unsub2 = s.subscribe(listener);
+  s.value = 3;
+
+  expect(listener).toHaveBeenCalledTimes(1);
+  expect(s.value).toBe(3);
+});
+
+test("signal with undefined initial value", () => {
+  const s = signal<number | undefined>(undefined);
+  expect(s.value).toBeUndefined();
+
+  s.value = undefined; // same value, should not notify
+  const listener = vi.fn();
+  s.subscribe(listener);
+
+  s.value = 42;
+  expect(listener).toHaveBeenCalledTimes(1);
+  expect(s.value).toBe(42);
+});
+
+test("multiple different signals batched together", async () => {
+  const s1 = signal(1);
+  const s2 = signal(10);
+  const listener1 = vi.fn();
+  const listener2 = vi.fn();
+
+  s1.subscribe(listener1);
+  s2.subscribe(listener2);
+
+  batch(() => {
+    s1.value = 2;
+    s2.value = 20;
+  });
+
+  expect(s1.value).toBe(2);
+  expect(s2.value).toBe(20);
+  expect(listener1).not.toHaveBeenCalled();
+  expect(listener2).not.toHaveBeenCalled();
+
+  await Promise.resolve();
+
+  expect(listener1).toHaveBeenCalledTimes(1);
+  expect(listener2).toHaveBeenCalledTimes(1);
+});

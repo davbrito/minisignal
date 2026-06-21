@@ -148,7 +148,7 @@ test("double dispose is safe", () => {
   expect(cleanup).toHaveBeenCalledTimes(1); // not called again
 });
 
-test("effect re-runs when any tracked signal changes (old subscriptions persist)", () => {
+test("effect re-runs when any tracked signal changes", () => {
   const toggle = signal(true);
   const s1 = signal("a");
   const s2 = signal("b");
