@@ -1,6 +1,4 @@
-import { enqueue } from "./_internal/batch";
-import { consumeSignal } from "./_internal/consume";
-import { Subscription } from "./_internal/subscription";
+import { SignalValue } from "./_internal/value";
 
 export type Signal<T> = {
   value: T;
@@ -8,18 +6,7 @@ export type Signal<T> = {
 };
 
 export function signal<T>(value: T): Signal<T> {
-  const subscription = Subscription();
-
-  return Object.freeze({
-    get value() {
-      consumeSignal(this);
-      return value;
-    },
-    set value(newValue) {
-      if (newValue === value) return;
-      value = newValue;
-      enqueue(this, subscription.notify);
-    },
-    subscribe: subscription.subscribe,
-  });
+  const signalValue = new SignalValue<T>();
+  signalValue.value = value;
+  return signalValue;
 }

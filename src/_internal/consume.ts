@@ -1,4 +1,4 @@
-import type { Signal } from "../signal";
+import type { SignalValue } from "./value";
 
 const MINISIGNAL_STACK = Symbol.for("minisignal.stack");
 
@@ -8,12 +8,14 @@ const MINISIGNAL_STACK = Symbol.for("minisignal.stack");
  * Each nested consume() call pushes its own scope, ensuring that signals
  * are attributed to the correct consumer without leaking across levels.
  */
-const scopeStack: Array<Set<Signal<unknown>>> = ((globalThis as any)[
+const scopeStack: Array<Set<SignalValue<unknown>>> = ((globalThis as any)[
   MINISIGNAL_STACK
 ] ??= []);
 
-export function consume<T>(fn: () => T): [T, ReadonlySet<Signal<unknown>>] {
-  const scope = new Set<Signal<unknown>>();
+export function consume<T>(
+  fn: () => T,
+): [T, ReadonlySet<SignalValue<unknown>>] {
+  const scope = new Set<SignalValue<unknown>>();
   scopeStack.push(scope);
   try {
     const result = fn();
@@ -23,8 +25,35 @@ export function consume<T>(fn: () => T): [T, ReadonlySet<Signal<unknown>>] {
   }
 }
 
-export function consumeSignal(signal: Signal<unknown>): void {
+export function consumeSignal(signal: SignalValue<unknown>): void {
   if (scopeStack.length === 0) return;
   const scope = scopeStack[scopeStack.length - 1];
   scope.add(signal);
+}
+
+export class SignalTracker {
+  #listener: () => void;
+  #cleanup: (() => void) | undefined;
+
+  constructor(listener: () => void) {
+    this.#listener = listener;
+  }
+
+  track<T>(fn: () => T): T {
+    this.#cleanup?.();
+    const [result, signals] = consume(fn);
+
+    const cleanups = Array.from(signals, (s) => s.subscribe(this.#listener));
+
+    this.#cleanup = () => {
+      cleanups.forEach((unsub) => unsub());
+    };
+
+    return result;
+  }
+
+  dispose() {
+    this.#cleanup?.();
+    this.#cleanup = undefined;
+  }
 }

@@ -1,32 +1,21 @@
-import { consume } from "./_internal/consume";
-import type { Signal } from "./signal";
+import { SignalTracker } from "./_internal/consume";
 
 type CleanupFunction = () => void;
 
 export function effect(fn: () => CleanupFunction | void): () => void {
-  let cleanup: (() => void) | void | undefined;
-  let unsubscribe: (() => void) | undefined;
+  let effectCleanup: (() => void) | void | undefined;
 
-  const runEffect = () => {
-    cleanup?.();
-    let signals: ReadonlySet<Signal<unknown>>;
+  const tracker = new SignalTracker(runEffect);
 
-    [cleanup, signals] = consume(fn);
-
-    const unsubscribes = Array.from(signals, (signal) =>
-      signal.subscribe(runEffect),
-    );
-
-    unsubscribe = () => {
-      unsubscribes.forEach((unsub) => unsub());
-    };
-  };
+  function runEffect() {
+    effectCleanup?.();
+    effectCleanup = tracker.track(fn);
+  }
 
   const dispose = () => {
-    unsubscribe?.();
-    unsubscribe = undefined;
-    cleanup?.();
-    cleanup = undefined;
+    effectCleanup?.();
+    effectCleanup = undefined;
+    tracker.dispose();
   };
 
   try {

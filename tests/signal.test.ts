@@ -247,6 +247,7 @@ test("unsubscribe and resubscribe works", () => {
 
   expect(listener).toHaveBeenCalledTimes(1);
   expect(s.value).toBe(3);
+  unsub2();
 });
 
 test("signal with undefined initial value", () => {

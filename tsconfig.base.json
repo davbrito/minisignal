@@ -13,6 +13,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "types": ["react"]
+    "types": ["react", "@testing-library/jest-dom/vitest"]
   }
 }

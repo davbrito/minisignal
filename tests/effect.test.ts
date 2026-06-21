@@ -137,7 +137,7 @@ test("double dispose is safe", () => {
   const cleanup = vi.fn();
 
   const dispose = effect(() => {
-    s.value;
+    void s.value;
     return cleanup;
   });
 

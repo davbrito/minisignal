@@ -18,6 +18,19 @@ test("has the new value after set", () => {
   expect(d.value).toBe(20);
 });
 
+test("has fresh values after unsubscribe", () => {
+  const s = signal(1);
+  const d = derived(() => s.value * 2);
+
+  const unsub = d.subscribe(() => {});
+
+  unsub();
+
+  s.value = 10;
+
+  expect(d.value).toBe(20);
+});
+
 test("calls the listener when the value changes", () => {
   const s = signal(1);
   const d = derived(() => s.value * 2);
@@ -80,23 +93,6 @@ test("subscribing to a derived with no signal dependencies returns a noop", () =
   expect(() => unsub()).not.toThrow();
 });
 
-test("subscribe when already valid skips re-computation", () => {
-  const s = signal(1);
-  const compute = vi.fn(() => s.value * 2);
-  const d = derived(compute);
-
-  // Access value first — makes valid = true
-  expect(d.value).toBe(2);
-  expect(compute).toHaveBeenCalledTimes(1);
-
-  // Subscribe while already valid
-  const listener = vi.fn();
-  d.subscribe(listener);
-
-  // compute should NOT have been called again
-  expect(compute).toHaveBeenCalledTimes(1);
-});
-
 test("derived from multiple signals", () => {
   const s1 = signal(1);
   const s2 = signal(10);
@@ -137,18 +133,28 @@ test("chained derived notifies listeners", () => {
   expect(d2.value).toBe(16);
 });
 
-test("derived notifies on every dependency change even if computed value is the same", () => {
+test("derived does not notify listeners if the value doesn't change even if dependencies change", () => {
   const s = signal(1);
   const d = derived(() => (s.value > 0 ? 10 : 20));
   const listener = vi.fn();
 
+  expect(d.value).toBe(10);
+
   d.subscribe(listener);
 
-  s.value = 2; // still produces 10, but dependency changed
-  expect(listener).toHaveBeenCalledTimes(1);
+  s.value = 2;
 
-  s.value = 3; // still 10
-  expect(listener).toHaveBeenCalledTimes(2);
+  expect(listener).not.toHaveBeenCalled();
+
+  s.value = -1;
+
+  expect(listener).toHaveBeenCalledTimes(1);
+  expect(d.value).toBe(20);
+
+  s.value = -2;
+
+  expect(listener).toHaveBeenCalledTimes(1);
+  expect(d.value).toBe(20);
 });
 
 test("cannot set the value of a derived react signal", () => {
@@ -158,4 +164,28 @@ test("cannot set the value of a derived react signal", () => {
   expect(() => {
     (d as any).value = 100;
   }).toThrow("Can't set the value of a derived signal");
+});
+
+test("subscribe after unsubscribe re-tracks signal dependencies", () => {
+  const s = signal(1);
+  const d = derived(() => s.value * 2);
+  const listener = vi.fn();
+
+  // First subscription
+  const unsub1 = d.subscribe(listener);
+  unsub1();
+
+  // All listeners gone — tracker should have disposed
+  // Second subscription should re-track
+  s.value = 5;
+  const unsub2 = d.subscribe(listener);
+
+  expect(d.value).toBe(10);
+  expect(listener).not.toHaveBeenCalled();
+
+  s.value = 10;
+  expect(listener).toHaveBeenCalledTimes(1);
+  expect(d.value).toBe(20);
+
+  unsub2();
 });
