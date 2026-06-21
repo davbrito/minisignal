@@ -1,7 +1,5 @@
-import { invariant } from "./utils";
-
 let isBatching = false;
-let tasksMap = new WeakMap<WeakKey, () => void>();
+const tasksMap = new WeakMap<WeakKey, () => void>();
 
 export function batch(fn: () => void): void {
   if (isBatching) {
@@ -28,6 +26,7 @@ export function enqueue(key: WeakKey, task: () => void): void {
   const hasTask = tasksMap.has(key);
   tasksMap.set(key, task);
   if (hasTask) return;
+  // eslint-disable-next-line @eslint-react/dom-no-flush-sync
   queueMicrotask(() => flushSync(key));
 }
 

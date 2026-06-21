@@ -10,8 +10,6 @@ export type Signal<T> = {
 export function signal<T>(value: T): Signal<T> {
   const subscription = Subscription();
 
-  let queue: T[] | null = null;
-
   return Object.freeze({
     get value() {
       consumeSignal(this);

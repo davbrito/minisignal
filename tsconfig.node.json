@@ -2,7 +2,7 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "target": "ES2022",
+    "target": "es2025",
     "module": "ESNext",
     "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true

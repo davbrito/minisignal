@@ -1,26 +1,15 @@
+import react from "@vitejs/plugin-react";
+import { globSync } from "node:fs";
+import dts from "unplugin-dts/vite";
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import fs from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import pkg from "./package.json" assert { type: "json" };
-import dts from "vite-plugin-dts";
+import pkg from "./package.json" with { type: "json" };
 
-const entries = await fs
-  .readdir(new URL("./src", import.meta.url), { withFileTypes: true })
-  .then((files) =>
-    files
-      .filter((file) => file.isFile() && /\.tsx?$/.test(file.name))
-      .reduce((acc, file) => {
-        const name = file.name.replace(/\.[jt]sx?$/, "");
-        acc[name] = fileURLToPath(
-          new URL(`./src/${file.name}`, import.meta.url)
-        );
-        return acc;
-      }, {} as Record<string, string>)
-  );
+const entries = globSync("src/*.{ts,tsx}", {
+  exclude: ["src/_internal/**/*"],
+});
 
 const externalLibs = Object.keys({
-  ...pkg.dependencies,
+  ...(pkg as unknown as Record<string, object>).dependencies,
   ...(pkg as unknown as Record<string, object>).peerDependencies,
 });
 
@@ -29,6 +18,7 @@ export default defineConfig({
     react(),
     dts({
       exclude: ["src/_internal/**/*"],
+      compilerOptions: { rootDir: "src" },
     }),
   ],
   build: {

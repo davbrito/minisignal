@@ -30,9 +30,13 @@ function objectDeepMutateObserverProxy<T>(
       if (typeof prop === "symbol") return value;
 
       if (Array.isArray(target) && mutableArrayMethods[prop]) {
+        invariant(
+          typeof value === "function",
+          `Expected ${prop} to be a function`,
+        );
         return (...args: unknown[]) => {
-          const result = Array.from(target) as any;
-          const returnValue = (value as Function).apply(result, args);
+          const result = Array.from(target);
+          const returnValue = value.apply(result, args);
           observer([], result);
           return returnValue;
         };

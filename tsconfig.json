@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo",
     "noEmit": true,
     "declaration": true,
     "declarationMap": true

@@ -46,6 +46,7 @@ test("keeps working if cloneElement is used", async () => {
   const { baseElement } = render(
     <div>
       <h1>My App</h1>
+      {/* eslint-disable-next-line @eslint-react/no-clone-element */}
       <p>Message: {cloneElement(s)}</p>
     </div>
   );

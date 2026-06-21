@@ -13,7 +13,6 @@ export function derived<U>(fn: () => U): Readonly<Signal<U>> {
   };
 
   const get = () => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (valid) return currentValue!;
     const [value, signals] = consume(fn);
     base = signals;
